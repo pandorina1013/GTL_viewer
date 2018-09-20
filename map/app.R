@@ -15,7 +15,7 @@ travel <- fromJSON('../Location History.json') %>%
   mutate(lat = latitudeE7/10000000) %>% 
   mutate(lon = longitudeE7/10000000) %>% 
   select(time, lon, lat) %>% 
-  mutate(time = ymd_hms(paste0("2018-01-01 ", hour(.$time), ":", minute(.$time), ":00"),tz = "Asia/Tokyo"))
+  mutate(time = ymd_hms(paste0("2018-01-01 ", hour(.$time), ":00", ":00"),tz = "Asia/Tokyo"))
 
 ui <- bootstrapPage(
   tags$style(type = "text/css", "html, body {width:100%;height:100%}"),
@@ -25,30 +25,20 @@ ui <- bootstrapPage(
                             min = min(travel$time), 
                             max = max(travel$time),
                             value = min(travel$time),
-                            step = 60,
-                            animate = animationOptions(interval = 0, loop = TRUE))
+                            step = 3600,
+                            animate = animationOptions(interval = 1000, loop = TRUE))
                 )
 )
 
 server <- function(input, output, session) {
-  history <- reactive({
-    travel %>%
-      filter(time == input$time)
-  })
   output$mymap <- renderLeaflet({
-    leaflet() %>% 
-      addTiles() %>%
-      setView(139.766084, 35.681382, zoom=12)
-  })
-  observe({
-    leafletProxy("mymap") %>% 
-      clearShapes() %>%
-      addCircles(lng = ~lon,
-                 lat = ~lat,
-                 data = history(),
-                 color = "red",
-                 weight = 10,
-                 opacity = 0.5)
+    travel %>%
+      filter(time == input$time) %>% 
+      leaflet() %>% 
+      addProviderTiles(providers$CartoDB.DarkMatter) %>%
+      setView(139.766084, 35.681382, zoom=12) %>% 
+      addWebGLHeatmap(lng=~lon, lat=~lat, size = 500)
+
   })
 }
 
