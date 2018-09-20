@@ -1,0 +1,2 @@
+# GTL_viewer
+google map timelineの移動履歴を時間ごとに時系列アニメーションヒートマップで可視化
